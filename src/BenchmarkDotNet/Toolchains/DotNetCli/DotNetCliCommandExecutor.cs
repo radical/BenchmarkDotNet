@@ -39,6 +39,7 @@ namespace BenchmarkDotNet.Toolchains.DotNetCli
                 if (!process.WaitForExit((int)parameters.Timeout.TotalMilliseconds))
                 {
                     parameters.Logger.WriteLineError($"// command took longer than the timeout: {parameters.Timeout.TotalSeconds:0.##}s. Killing the process tree!");
+                    parameters.Logger.WriteLineError($"// hasExited: {process.HasExited}");
 
                     outputReader.CancelRead();
                     process.KillTree();
