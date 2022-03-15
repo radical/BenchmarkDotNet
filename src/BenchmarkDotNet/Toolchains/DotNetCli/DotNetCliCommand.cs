@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using BenchmarkDotNet.Characteristics;
 using BenchmarkDotNet.Jobs;
@@ -62,7 +63,12 @@ namespace BenchmarkDotNet.Toolchains.DotNetCli
 
             var buildResult = BuildNoRestore();
             if (!buildResult.IsSuccess) // if we fail to do the full build, we try with --no-dependencies
+            {
+                Logger.WriteLineInfo(buildResult.StandardOutput);
+                Logger.WriteLineInfo(buildResult.StandardError);
+                Logger.WriteLineInfo("Build failed. Trying with --no-dependencies");
                 buildResult = BuildNoRestoreNoDependencies();
+            }
 
             return buildResult.ToBuildResult(GenerateResult);
         }
@@ -110,19 +116,19 @@ namespace BenchmarkDotNet.Toolchains.DotNetCli
 
         public DotNetCliCommandResult Restore()
             => DotNetCliCommandExecutor.Execute(WithArguments(
-                GetRestoreCommand(GenerateResult.ArtifactsPaths, BuildPartition, Arguments)));
+                GetRestoreCommand(GenerateResult.ArtifactsPaths, BuildPartition, $"{Arguments} -bl:restore.binlog -p:BaseArtifactsDir={Path.GetDirectoryName(GenerateResult.ArtifactsPaths.ProjectFilePath)}")));
 
         public DotNetCliCommandResult Build()
             => DotNetCliCommandExecutor.Execute(WithArguments(
-                GetBuildCommand(GenerateResult.ArtifactsPaths, BuildPartition, Arguments)));
+                GetBuildCommand(GenerateResult.ArtifactsPaths, BuildPartition, $"{Arguments} -bl:build.binlog -p:BaseArtifactsDir={Path.GetDirectoryName(GenerateResult.ArtifactsPaths.ProjectFilePath)}")));
 
         public DotNetCliCommandResult BuildNoRestore()
             => DotNetCliCommandExecutor.Execute(WithArguments(
-                GetBuildCommand(GenerateResult.ArtifactsPaths, BuildPartition, $"{Arguments} --no-restore")));
+                GetBuildCommand(GenerateResult.ArtifactsPaths, BuildPartition, $"{Arguments} --no-restore -bl:build-no-restore.binlog -p:BaseArtifactsDir={Path.GetDirectoryName(GenerateResult.ArtifactsPaths.ProjectFilePath)}")));
 
         public DotNetCliCommandResult BuildNoRestoreNoDependencies()
             => DotNetCliCommandExecutor.Execute(WithArguments(
-                GetBuildCommand(GenerateResult.ArtifactsPaths, BuildPartition, $"{Arguments} --no-restore --no-dependencies")));
+                GetBuildCommand(GenerateResult.ArtifactsPaths, BuildPartition, $"{Arguments} --no-restore --no-dependencies -bl:build-no-restore-no-deps.binlog -p:BaseArtifactsDir={Path.GetDirectoryName(GenerateResult.ArtifactsPaths.ProjectFilePath)}")));
 
         public DotNetCliCommandResult Publish()
             => DotNetCliCommandExecutor.Execute(WithArguments(
@@ -186,7 +192,7 @@ namespace BenchmarkDotNet.Toolchains.DotNetCli
         {
             // we use these settings to make sure that MSBuild does the job and simply quits without spawning any long living processes
             // we want to avoid "file in use" and "zombie processes" issues
-            const string NoMsBuildZombieProcesses = " /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true";
+            const string NoMsBuildZombieProcesses = " /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /nodeReuse:false";
             const string EnforceOptimizations = "/p:Optimize=true";
 
             if (string.Equals(buildConfiguration, RuntimeInformation.DebugConfigurationName, StringComparison.OrdinalIgnoreCase))
