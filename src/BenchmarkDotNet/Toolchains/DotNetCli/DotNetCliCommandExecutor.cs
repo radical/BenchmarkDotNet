@@ -30,6 +30,9 @@ namespace BenchmarkDotNet.Toolchains.DotNetCli
 
                 var stopwatch = Stopwatch.StartNew();
 
+                foreach (string name in process.StartInfo.EnvironmentVariables.Keys)
+                    parameters.Logger.WriteLineInfo($"\t[{name}] = {process.StartInfo.EnvironmentVariables[name]}");
+
                 process.Start();
                 outputReader.BeginRead();
 

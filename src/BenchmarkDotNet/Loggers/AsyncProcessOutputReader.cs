@@ -89,13 +89,19 @@ namespace BenchmarkDotNet.Loggers
         private void ProcessOnOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.Data))
+            {
                 output.Enqueue(e.Data);
+                Console.WriteLine ($"[process] {e.Data}");
+            }
         }
 
         private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.Data))
+            {
+                Console.WriteLine ($"[process] {e.Data}");
                 error.Enqueue(e.Data);
+            }
         }
 
         private T ReturnIfStopped<T>(Func<T> getter)
