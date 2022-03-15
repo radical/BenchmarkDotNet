@@ -35,6 +35,15 @@ namespace BenchmarkDotNet.Toolchains.MonoWasm
             {
                 GenerateProjectFile(buildPartition, artifactsPaths, aot: false, logger);
             }
+
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(artifactsPaths.ProjectFilePath), "Directory.Build.props"),
+                @"
+                <Project>
+                    <PropertyGroup>
+                        <ArtifactsDir Condition=""'$(BaseArtifactsDir)' != ''"">$(BaseArtifactsDir)/artifacts/</ArtifactsDir>
+                    </PropertyGroup>
+                    <Import Project=""$([MSBuild]::GetPathOfFileAbove(Directory.Build.props, $(MSBuildThisFileDirectory)..))"" />
+                </Project>");
         }
 
         protected void GenerateProjectFile(BuildPartition buildPartition, ArtifactsPaths artifactsPaths, bool aot, ILogger logger)
