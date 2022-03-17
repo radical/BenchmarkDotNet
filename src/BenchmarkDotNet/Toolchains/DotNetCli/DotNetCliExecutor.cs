@@ -76,7 +76,7 @@ namespace BenchmarkDotNet.Toolchains.DotNetCli
             {
                 var loggerWithDiagnoser = new SynchronousProcessOutputLoggerWithDiagnoser(logger, process, diagnoser, benchmarkCase, benchmarkId);
 
-                logger.WriteLineInfo($"// Execute: {process.StartInfo.FileName} {process.StartInfo.Arguments} in {process.StartInfo.WorkingDirectory}");
+                logger.WriteLineInfo($"// (DotNetCliExecutor) Execute: {process.StartInfo.FileName} {process.StartInfo.Arguments} in {process.StartInfo.WorkingDirectory}");
 
                 diagnoser?.Handle(HostSignal.BeforeProcessStart, new DiagnoserActionParameters(process, benchmarkCase, benchmarkId));
 
@@ -92,7 +92,8 @@ namespace BenchmarkDotNet.Toolchains.DotNetCli
 
                 if (!process.WaitForExit(milliseconds: (int)ExecuteParameters.ProcessExitTimeout.TotalMilliseconds))
                 {
-                    logger.WriteLineInfo($"// The benchmarking process did not quit within {ExecuteParameters.ProcessExitTimeout.TotalSeconds} seconds, it's going to get force killed now.");
+                    logger.WriteLineInfo($"// (DotNetCliExecutor) The benchmarking process did not quit within {ExecuteParameters.ProcessExitTimeout.TotalSeconds} seconds, it's going to get force killed now.");
+                    logger.WriteLineError($"// hasExited: {process.HasExited}");
 
                     consoleExitHandler.KillProcessTree();
                 }

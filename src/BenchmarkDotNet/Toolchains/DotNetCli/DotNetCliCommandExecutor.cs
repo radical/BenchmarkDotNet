@@ -30,12 +30,16 @@ namespace BenchmarkDotNet.Toolchains.DotNetCli
 
                 var stopwatch = Stopwatch.StartNew();
 
+                foreach (string name in process.StartInfo.EnvironmentVariables.Keys)
+                    parameters.Logger.WriteLineInfo($"\t[{name}] = {process.StartInfo.EnvironmentVariables[name]}");
+
                 process.Start();
                 outputReader.BeginRead();
 
                 if (!process.WaitForExit((int)parameters.Timeout.TotalMilliseconds))
                 {
                     parameters.Logger.WriteLineError($"// command took longer than the timeout: {parameters.Timeout.TotalSeconds:0.##}s. Killing the process tree!");
+                    parameters.Logger.WriteLineError($"// hasExited: {process.HasExited}");
 
                     outputReader.CancelRead();
                     process.KillTree();

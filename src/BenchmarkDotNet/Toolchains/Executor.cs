@@ -73,7 +73,8 @@ namespace BenchmarkDotNet.Toolchains
 
             if (!process.WaitForExit(milliseconds: (int)ExecuteParameters.ProcessExitTimeout.TotalMilliseconds))
             {
-                logger.WriteLineInfo("// The benchmarking process did not quit on time, it's going to get force killed now.");
+                logger.WriteLineInfo("// (Executor) The benchmarking process did not quit on time, it's going to get force killed now.");
+                logger.WriteLineError($"// hasExited: {process.HasExited}");
 
                 consoleExitHandler.KillProcessTree();
             }
@@ -81,7 +82,12 @@ namespace BenchmarkDotNet.Toolchains
             if (loggerWithDiagnoser.LinesWithResults.Any(line => line.Contains("BadImageFormatException")))
                 logger.WriteLineError("You are probably missing <PlatformTarget>AnyCPU</PlatformTarget> in your .csproj file.");
 
-            return new ExecuteResult(true, process.ExitCode, process.Id, loggerWithDiagnoser.LinesWithResults, loggerWithDiagnoser.LinesWithExtraOutput, launchIndex);
+            return new ExecuteResult(true,
+                process.HasExited ? process.ExitCode : null,
+                process.Id,
+                loggerWithDiagnoser.LinesWithResults,
+                loggerWithDiagnoser.LinesWithExtraOutput,
+                launchIndex);
         }
 
         private ProcessStartInfo CreateStartInfo(BenchmarkCase benchmarkCase, ArtifactsPaths artifactsPaths, string args, IResolver resolver)

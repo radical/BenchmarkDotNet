@@ -73,6 +73,7 @@ namespace BenchmarkDotNet.Loggers
                     LinesWithExtraOutput.Add(line);
                 }
             }
+            Console.WriteLine ($"*** .. END ProcessInput");
         }
     }
 }
